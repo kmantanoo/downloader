@@ -1,4 +1,4 @@
-package test.model;
+package test.config;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

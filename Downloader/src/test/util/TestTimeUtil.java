@@ -12,11 +12,18 @@ import utils.TimeUtil;
 public class TestTimeUtil {
 
    @Test
-   public void test() {
+   public void testGetTimeStamp() {
       String timeStamp = TimeUtil.getTimeStamp();
       Date d = new Date(System.currentTimeMillis());
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+      SimpleDateFormat sdf = TimeUtil.numericDateTimeFormat;
       assertEquals(sdf.format(d), timeStamp);
    }
 
+   @Test
+   public void testGetTimeStampWithDate() {
+      String timeStamp = TimeUtil.getTimeStampWithDate();
+      Date d = new Date(System.currentTimeMillis());
+      SimpleDateFormat sdf = TimeUtil.alphaNumericDateTimeFormat;
+      assertEquals(sdf.format(d), timeStamp);
+   }
 }

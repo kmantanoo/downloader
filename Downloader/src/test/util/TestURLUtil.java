@@ -64,6 +64,17 @@ public class TestURLUtil {
       assertEquals("ftp", URLUtil.getProtocolFromURL(links.get(5)));
       assertEquals(null, URLUtil.getProtocolFromURL(links.get(6)));
    }
+   
+   @Test
+   public void testGetFileName() {
+      assertEquals("d.txt", URLUtil.getFileName(links.get(0)));
+      assertEquals("h.txt", URLUtil.getFileName(links.get(1)));
+      assertEquals("dddd.txt", URLUtil.getFileName(links.get(2)));
+      assertEquals(null, URLUtil.getFileName(links.get(3)));
+      assertEquals(null, URLUtil.getFileName(links.get(4)));
+      assertEquals(null, URLUtil.getFileName(links.get(5)));
+      assertEquals(null, URLUtil.getFileName(links.get(6)));
+   }
 
    @Test
    public void testNullInputOnGetHost() {
@@ -81,6 +92,12 @@ public class TestURLUtil {
    public void testNullInputOnGetProtocol() {
       expEx.expect(NullPointerException.class);
       URLUtil.getProtocolFromURL(links.get(7));
+   }
+   
+   @Test
+   public void testNullInputOnGetFileName() {
+      expEx.expect(NullPointerException.class);
+      URLUtil.getFileName(links.get(7));
    }
 
    @AfterClass

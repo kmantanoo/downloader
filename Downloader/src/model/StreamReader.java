@@ -20,5 +20,4 @@ public class StreamReader implements Callable<Integer> {
    public Integer call() throws Exception {
       return this.inputStream.read(buff);
    }
-
 }
