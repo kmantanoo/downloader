@@ -4,127 +4,91 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class URLUtil {
-	private static String SIMPLE_URL_PATTERN = "([a-z]+)://(.*)";
-	private static Pattern COMPILED = Pattern.compile(SIMPLE_URL_PATTERN);
+   private static String SIMPLE_URL_PATTERN = "([a-z]+)://(.*)";
+   private static Pattern COMPILED = Pattern.compile(SIMPLE_URL_PATTERN);
 
-	public static String genFileNameFromURL(String url) throws NullPointerException {
-		
-		if (url==null)
-			throw new NullPointerException("url");
-		
-		
-		Matcher m = COMPILED.matcher(url);
-		if (m.matches()) {
+   public static String getProtocolFromURL(String url) throws NullPointerException {
 
-			String woProtocol = m.group(2);
-			Pattern p = Pattern.compile("([\\w\\.]+)+(?:\\/\\w+)*\\/(.+)");
-			m = p.matcher(woProtocol);
+      if (url == null)
+         throw new NullPointerException("url");
 
-			if (m.matches()) {
+      Matcher m = COMPILED.matcher(url);
 
-				String domainName = m.group(1).replaceAll("\\.", "_");
-				String fNameWithoutEx = m.group(2).replaceAll("\\.\\w+$", "");
-				String timeStamp = TimeUtil.getTimeStamp();
-				String fileEx = "";
+      if (m.matches()) {
+         return m.group(1);
+      }
 
-				if (m.group(2).contains(".")) {
+      return null;
 
-					fileEx = m.group(2).replaceAll(".*\\.", ".");
+   }
 
-				}
+   public static String getFilePath(String url) throws NullPointerException {
 
-				String fullName = domainName + "-" + fNameWithoutEx + "-" + timeStamp + fileEx;
-				return fullName;
+      if (url == null)
+         throw new NullPointerException("url");
+      Matcher m = COMPILED.matcher(url);
+      if (m.matches()) {
 
-			}
+         String woProtocol = m.group(2);
+         Pattern p = Pattern.compile("(?:[\\w\\.]+)/(.+)");
+         m = p.matcher(woProtocol);
 
-		}
+         if (m.matches()) {
 
-		return null;
-	}
+            String filePath = m.group(1);
+            return filePath;
 
-	public static String getProtocolFromURL(String url) throws NullPointerException{
-		
-		if (url==null) 
-			throw new NullPointerException("url");
+         }
 
-		Matcher m = COMPILED.matcher(url);
+      }
 
-		if (m.matches()) {
-			return m.group(1);
-		}
+      return null;
+   }
 
-		return null;
+   public static String getHost(String url) throws NullPointerException {
 
-	}
+      if (url == null)
+         throw new NullPointerException("url");
 
-	public static String getFilePath(String url) throws NullPointerException{
-		
-		if (url==null) 
-			throw new NullPointerException("url");
-		Matcher m = COMPILED.matcher(url);
-		if (m.matches()) {
+      Matcher m = COMPILED.matcher(url);
+      if (m.matches()) {
 
-			String woProtocol = m.group(2);
-			Pattern p = Pattern.compile("(?:[\\w\\.]+)/(.+)");
-			m = p.matcher(woProtocol);
+         String woProtocol = m.group(2);
+         Pattern p = Pattern.compile("([\\w\\.]+)/.*");
+         m = p.matcher(woProtocol);
 
-			if (m.matches()) {
+         if (m.matches()) {
 
-				String filePath = m.group(1);
-				return filePath;
+            String domainName = m.group(1);
+            return domainName;
 
-			}
+         }
 
-		}
+      }
 
-		return null;
-	}
-	
-	public static String getHost(String url) throws NullPointerException{
-		
-		if (url==null) 
-			throw new NullPointerException("url");
-		
-		Matcher m = COMPILED.matcher(url);
-		if (m.matches()) {
+      return null;
+   }
 
-			String woProtocol = m.group(2);
-			Pattern p = Pattern.compile("([\\w\\.]+)/.*");
-			m = p.matcher(woProtocol);
+   public static String getFileName(String url) throws NullPointerException {
+      if (url == null)
+         throw new NullPointerException("url");
 
-			if (m.matches()) {
+      Matcher m = COMPILED.matcher(url);
+      if (m.matches()) {
 
-				String domainName = m.group(1);
-				return domainName;
+         String woProtocol = m.group(2);
+         Pattern p = Pattern.compile("([\\w\\.]+)+(?:\\/\\w+)*\\/(.+)");
+         m = p.matcher(woProtocol);
 
-			}
+         if (m.matches()) {
 
-		}
+            String fileName = m.group(2);
+            return fileName;
 
-		return null;
-	}
-	
-	public static String getFileName(String url) throws NullPointerException {
-		if (url == null) 
-			throw new NullPointerException("url");
-		
-		Matcher m = COMPILED.matcher(url);
-		if (m.matches()) {
+         }
 
-			String woProtocol = m.group(2);
-			Pattern p = Pattern.compile("([\\w\\.]+)+(?:\\/\\w+)*\\/(.+)");
-			m = p.matcher(woProtocol);
+      }
 
-			if (m.matches()) {
-
-				String fileName = m.group(2);
-				return fileName;
-
-			}
-
-		}
-		
-		return null;
-	}
+      return null;
+   }
 }

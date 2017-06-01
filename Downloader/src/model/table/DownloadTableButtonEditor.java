@@ -14,76 +14,69 @@ import view.panel.DownloadList;
 
 public class DownloadTableButtonEditor extends DefaultCellEditor {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private JButton button;
-    private boolean clicked;
-    private int row;
-    private DownloadState state;
-    private DownloadList dlListPanel;
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   private JButton button;
+   private boolean clicked;
+   private int row;
+   private DownloadState state;
+   private DownloadList dlListPanel;
 
-    public DownloadTableButtonEditor(JCheckBox checkBox, DownloadList panel)
-    {
+   public DownloadTableButtonEditor(JCheckBox checkBox, DownloadList panel) {
       super(checkBox);
       this.dlListPanel = panel;
       button = new JButton();
       button.setOpaque(true);
-      button.addActionListener(new ActionListener()
-      {
-        public void actionPerformed(ActionEvent e)
-        {
-          fireEditingStopped();
-        }
+      button.addActionListener(new ActionListener() {
+         public void actionPerformed(ActionEvent e) {
+            fireEditingStopped();
+         }
       });
-    }
-    
-    @Override
-    public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column)
-    {
+   }
+
+   @Override
+   public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
       this.row = row;
-      
+
       state = (DownloadState) value;
       button.setIcon(dlListPanel.getImageIcon(state));
       button.setActionCommand(state == DownloadState.ERROR ? "redo" : "clear");
       clicked = true;
       return button;
-    }
-    public Object getCellEditorValue()
-    {
-      if (clicked)
-      {
-    	  switch (button.getActionCommand()) {
-    	  case "clear":
-    		  doClear();
-    		  break;
-    	  case "redo":
-    		  doRedo();
-    		  break;
-    	  }
+   }
+
+   public Object getCellEditorValue() {
+      if (clicked) {
+         switch (button.getActionCommand()) {
+         case "clear":
+            doClear();
+            break;
+         case "redo":
+            doRedo();
+            break;
+         }
       }
       clicked = false;
       return state;
-    }
-    
-    public boolean stopCellEditing()
-    {
+   }
+
+   public boolean stopCellEditing() {
       clicked = false;
       return super.stopCellEditing();
-    }
+   }
 
-    protected void fireEditingStopped()
-    {
+   protected void fireEditingStopped() {
       super.fireEditingStopped();
-    }
-	
-	private void doClear() {
-		dlListPanel.cancelDownload(row);
-		dlListPanel.disableButtonAtRow(row);
-	}
-	
-	private void doRedo() {
-		dlListPanel.restartWorker(row);
-	}
+   }
+
+   private void doClear() {
+      dlListPanel.cancelDownload(row);
+      dlListPanel.disableButtonAtRow(row);
+   }
+
+   private void doRedo() {
+      dlListPanel.restartWorker(row);
+   }
 }

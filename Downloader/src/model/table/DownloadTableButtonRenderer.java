@@ -11,33 +11,33 @@ import view.panel.DownloadList;
 
 public class DownloadTableButtonRenderer extends JButton implements TableCellRenderer {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private DownloadList dlListPanel;
+   /**
+    * 
+    */
+   private static final long serialVersionUID = 1L;
+   private DownloadList dlListPanel;
 
-	public DownloadTableButtonRenderer(DownloadList panel) {
-		setOpaque(true);
-		this.dlListPanel = panel;
-	}
+   public DownloadTableButtonRenderer(DownloadList panel) {
+      setOpaque(true);
+      this.dlListPanel = panel;
+   }
 
-	@Override
-	public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
-			int row, int column) {
-		DownloadState dlState = (DownloadState) value;
+   @Override
+   public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+         int row, int column) {
+      DownloadState dlState = (DownloadState) value;
 
-		setIcon(dlListPanel.getImageIcon(dlState));
+      setIcon(dlListPanel.getImageIcon(dlState));
 
-		if (DownloadState.COMPLETE == ((DownloadState) value)) {
-			setEnabled(false);
-			DownloadTableModel model = (DownloadTableModel) table.getModel();
-			model.addExceptRow(row);
-		} else {
-			setEnabled(table.getModel().isCellEditable(row, column));
-		}
+      if (DownloadState.COMPLETE == ((DownloadState) value)) {
+         setEnabled(false);
+         DownloadTableModel model = (DownloadTableModel) table.getModel();
+         model.addExceptRow(row);
+      } else {
+         setEnabled(table.getModel().isCellEditable(row, column));
+      }
 
-		return this;
-	}
+      return this;
+   }
 
 }
