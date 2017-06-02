@@ -14,8 +14,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import model.datasource.CredentialRequired;
-
 public class UserPasswordDialog extends JDialog {
 
    /**
@@ -25,16 +23,14 @@ public class UserPasswordDialog extends JDialog {
    private final JPanel contentPanel = new JPanel();
    private JTextField txtUsername;
    private JPasswordField txtPassword;
-   private CredentialRequired credentialReq;
 
    /**
     * Create the dialog.
     */
-   public UserPasswordDialog(AppWindow window, String title, CredentialRequired credentialReq) {
+   public UserPasswordDialog(AppWindow window, String title) {
 
       super(window, title, true);
 
-      this.credentialReq = credentialReq;
 
       setBounds(100, 100, 367, 234);
       getContentPane().setLayout(new BorderLayout());
@@ -78,6 +74,14 @@ public class UserPasswordDialog extends JDialog {
          }
       }
    }
+   
+   public String getUsername() {
+      return txtUsername.getText();
+   }
+   
+   public String getPassword() {
+      return new String(txtPassword.getPassword());
+   }
 
    private class UserPasswordActionListener implements ActionListener {
       private JDialog dialog;
@@ -106,7 +110,6 @@ public class UserPasswordDialog extends JDialog {
          String username, password;
          username = txtUsername.getText();
          password = new String(txtPassword.getPassword());
-
          if ("".equals(username)) {
             JOptionPane.showMessageDialog(dialog, "Username cannot be null", "Null input for username",
                   JOptionPane.WARNING_MESSAGE);
@@ -114,7 +117,6 @@ public class UserPasswordDialog extends JDialog {
             JOptionPane.showMessageDialog(dialog, "Password cannot be null", "Null input for password",
                   JOptionPane.WARNING_MESSAGE);
          } else {
-            credentialReq.setCredentialInfo(username, password);
             dialog.setVisible(false);
          }
       }

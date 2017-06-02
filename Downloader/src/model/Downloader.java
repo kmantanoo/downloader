@@ -27,54 +27,47 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import config.AppConfig;
-import config.UserSettings;
+import controller.DownloadManager;
 import model.datasource.DataSource;
 import model.enumeration.DownloadState;
 import model.exception.InvalidURLException;
 import utils.URLUtil;
-import view.window.AppWindow;
 
 public class Downloader extends SwingWorker<Long, Integer> {
    private static int BUFFER_SIZE = 4096;
    private static int FLUSH_THRESHOLD = BUFFER_SIZE * 4;
    public static final int PUBLISH_CANCEL = -1;
    public static final int PUBLISH_ERROR = -2;
-   private String source;
-   private long size;
-   private long downloaded;
    private int timeOut;
    private int downloadSeq;
+   private long size;
+   private long downloaded;
    private long startTime;
-   private AppConfig conf;
+   private String source;
    private DownloadState state;
    private DataSource dataSource;
-   private UserSettings settings;
-   private AppWindow app;
    private Path savedPath;
+   private DownloadManager manager;
 
-   public Downloader(String source, UserSettings settings, AppWindow app, int downloadSeq)
+   public Downloader(DownloadManager manager, String source, int downloadSeq)
          throws InvalidURLException, NullPointerException {
       UrlValidator validator = new UrlValidator(UrlValidator.ALLOW_ALL_SCHEMES | UrlValidator.ALLOW_LOCAL_URLS);
 
       if (!validator.isValid(source))
          throw new InvalidURLException(source);
 
-      if (settings == null)
-         throw new NullPointerException("settings");
+      if (manager == null)
+         throw new NullPointerException("manager");
 
-      if (app == null)
-         throw new NullPointerException("app");
-
-      this.settings = settings;
       this.source = source;
-      this.app = app;
       this.downloadSeq = downloadSeq;
+      this.manager = manager;
       this.size = -1;
       this.downloaded = 0;
-      this.conf = AppConfig.getInstance();
    }
 
    private void prepareDataSource() throws Exception {
+      AppConfig conf = AppConfig.getInstance();
       String className = conf.getProp("protocol." + URLUtil.getProtocolFromURL(source));
       String classPath = "model.datasource.";
       timeOut = Integer.parseInt(conf.getProp("timeout"));
@@ -83,76 +76,75 @@ public class Downloader extends SwingWorker<Long, Integer> {
 
       dataSource.openConnection();
       size = dataSource.getSize();
+      state = DownloadState.DOWNLOAD;
    }
 
    @Override
    protected Long doInBackground() throws Exception {
       long result;
 
-      prepareDataSource();
 
-      if (state != DownloadState.ERROR) {
-         FileOutputStream fos = null;
-         File outputFile = null;
-         ExecutorService executor = Executors.newCachedThreadPool();
+      FileOutputStream fos = null;
+      File outputFile = null;
+      ExecutorService executor = Executors.newCachedThreadPool();
 
-         InputStream in = dataSource.getInputStream();
-         Path pathToFile = toRandomFilePath();
-         outputFile = pathToFile.toFile();
-         fos = getFileOutputStream(outputFile);
+      InputStream in = null;
+      Path pathToFile = toRandomFilePath();
+      outputFile = pathToFile.toFile();
+      fos = getFileOutputStream(outputFile);
 
-         try {
-            startTime = System.currentTimeMillis();
-            transferDataStream(in, fos, executor);
-            state = DownloadState.COMPLETE;
-            publish(downloadProgress());
-            result = downloaded;
-         } catch (Exception e) {
-            if (e instanceof InterruptedException) {
-               state = DownloadState.CANCEL;
-               publish(PUBLISH_CANCEL);
-               result = 0;
-            } else {
-               state = DownloadState.ERROR;
-               publish(PUBLISH_ERROR);
-               result = -1;
-            }
-            cancel(true);
-            e.printStackTrace();
-
-         } finally {
-            try {
-               executor.shutdown();
-               if (fos != null)
-                  fos.close();
-               if (in != null)
-                  in.close();
-               dataSource.closeConnection();
-
-               if (outputFile != null) {
-                  if (state != DownloadState.COMPLETE) {
-                     outputFile.delete();
-                  } else {
-                     savedPath = renameFile(pathToFile, URLUtil.getFileName(source));
-                     publish(downloadProgress());
-                     result = downloaded;
-                  }
-               }
-            } catch (IOException ex) {
-               ex.printStackTrace();
-            } catch (Exception e) {
-               e.printStackTrace();
-            }
+      try {
+         prepareDataSource();
+         in = dataSource.getInputStream();
+         startTime = System.currentTimeMillis();
+         transferDataStream(in, fos, executor);
+         state = DownloadState.COMPLETE;
+         publish(downloadProgress());
+         result = downloaded;
+      } catch (Exception e) {
+         if (e instanceof InterruptedException) {
+            state = DownloadState.CANCEL;
+            publish(PUBLISH_CANCEL);
+            result = 0;
+         } else {
+            state = DownloadState.ERROR;
+            publish(PUBLISH_ERROR);
+            result = -1;
          }
-         return result;
+         cancel(true);
+         e.printStackTrace();
+
+      } finally {
+         try {
+            executor.shutdown();
+            if (fos != null)
+               fos.close();
+            if (in != null)
+               in.close();
+            dataSource.closeConnection();
+
+            if (outputFile != null) {
+               if (state != DownloadState.COMPLETE) {
+                  outputFile.delete();
+               } else {
+                  savedPath = renameFile(pathToFile, URLUtil.getFileName(source));
+                  publish(downloadProgress());
+                  result = downloaded;
+               }
+            }
+         } catch (IOException ex) {
+            ex.printStackTrace();
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
       }
-      return new Long(-1);
+      return result;
    }
 
    @Override
    public void process(List<Integer> ints) {
-      app.setValueAt(ints.get(ints.size() - 1), downloadSeq, 0);
-      app.setValueAt(state, downloadSeq, 1);
+      manager.getAppWindow().setValueAt(ints.get(ints.size() - 1), downloadSeq, 0);
+      manager.getAppWindow().setValueAt(state, downloadSeq, 1);
    }
 
    private Path renameFile(Path genFile, String newName) throws IOException {
@@ -219,10 +211,11 @@ public class Downloader extends SwingWorker<Long, Integer> {
 
    private DataSource getDataSourceInstace(String dataSourceClassPath)
          throws InstantiationException, IllegalAccessException, ClassNotFoundException {
+      
       DataSource dtSource = (DataSource) Class.forName(dataSourceClassPath).newInstance();
-      dataSource.setSource(source);
-      dataSource.setAppConfig(conf);
-      dataSource.setAppWindow(app);
+      dtSource.setSource(source);
+      dtSource.setAppConfig(AppConfig.getInstance());
+      dtSource.setDownloader(this);
 
       return dtSource;
    }
@@ -235,7 +228,8 @@ public class Downloader extends SwingWorker<Long, Integer> {
 
    private Path toRandomFilePath() {
       String dstDirectory, generatedFileName;
-      dstDirectory = settings.getDestinationFolder();
+//      dstDirectory = settings.getDestinationFolder();
+      dstDirectory = manager.getDestinationFolder();
       generatedFileName = genFileName();
       return FileSystems.getDefault().getPath(dstDirectory, generatedFileName);
    }
@@ -264,7 +258,7 @@ public class Downloader extends SwingWorker<Long, Integer> {
    public Downloader clone() {
       Downloader newInstance = null;
       try {
-         newInstance = new Downloader(source, settings, app, downloadSeq);
+         newInstance = new Downloader(manager, source, downloadSeq);
       } catch (NullPointerException | InvalidURLException e) {
          e.printStackTrace();
       }
@@ -291,4 +285,7 @@ public class Downloader extends SwingWorker<Long, Integer> {
       }
    }
 
+   public CredentialInformation getCredentialInfo(String requester) {
+      return manager.getCredentialInfo(requester);
+   }
 }

@@ -1,5 +1,6 @@
 package controller;
 
+import java.awt.EventQueue;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -10,8 +11,10 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 
 import config.UserSettings;
+import model.CredentialInformation;
 import model.Downloader;
 import model.enumeration.DownloadState;
 import model.exception.InvalidURLException;
@@ -19,32 +22,33 @@ import utils.TimeUtil;
 import view.window.AppWindow;
 
 public class DownloadManager {
-   // private List<Thread> threads;
-   // private StringBuilder errorMessage;
    private UserSettings settings;
    private AppWindow app;
-   private List<String> sources;
    private List<Downloader> workers;
+   private String sources;
 
-   public DownloadManager(AppWindow app) {
+   public DownloadManager() {
       settings = new UserSettings();
       workers = new ArrayList<Downloader>();
+   }
+   
+   public void setAppWindow(AppWindow app) {
       this.app = app;
    }
 
    public void downloadFiles(String sourceString) {
-      sources = getSourcesList(sourceString);
+      sources = sourceString;
       workers.clear();
       app.makeButtonClickableAllRow(true);
       int downloadSeq = 0;
-      for (String source : sources) {
+      for (String source : getSourcesList(sourceString)) {
          newDownload(source, downloadSeq++);
       }
    }
 
    private void newDownload(String source, int downloadSeq) {
       try {
-         Downloader worker = new Downloader(source, settings, app, downloadSeq);
+         Downloader worker = new Downloader(this, source, downloadSeq);
          app.addRow(new Object[] { 0, DownloadState.DOWNLOAD });
 
          workers.add(worker);
@@ -92,11 +96,15 @@ public class DownloadManager {
    }
 
    public String getSourceAtIndex(int index) {
-      return sources.get(index);
+      return getSourcesList(sources).get(index);
    }
 
    public Path getSavedFile(int index) {
       return workers.get(index).getSavedPath();
+   }
+   
+   public AppWindow getAppWindow() {
+      return app;
    }
 
    public void cancelDownload() {
@@ -117,5 +125,31 @@ public class DownloadManager {
       Downloader newInstance = workers.get(downloadSeq).clone();
       workers.set(downloadSeq, newInstance);
       newInstance.execute();
+   }
+
+   public CredentialInformation getCredentialInfo(String requester) {
+      return app.getCredentialInfo(requester);
+   }
+   
+   
+   /**
+    * Launch the application.
+    */
+   public static void main(String[] args) {
+      EventQueue.invokeLater(new Runnable() {
+         public void run() {
+            try {
+               UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+               DownloadManager dlManager = new DownloadManager();
+               AppWindow appWindow = new AppWindow();
+               
+               dlManager.setAppWindow(appWindow);
+               appWindow.setDownloadManager(dlManager);
+               appWindow.setVisible(true);
+            } catch (Exception e) {
+               e.printStackTrace();
+            }
+         }
+      });
    }
 }

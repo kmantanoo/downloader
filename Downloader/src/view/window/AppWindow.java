@@ -1,15 +1,15 @@
 package view.window;
 
-import java.awt.EventQueue;
 import java.nio.file.Path;
 
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
 
 import controller.DownloadManager;
+import model.CredentialInformation;
 import model.enumeration.DownloadState;
 import view.panel.ControlPanel;
 import view.panel.DownloadList;
@@ -26,28 +26,11 @@ public class AppWindow extends JFrame {
    private DownloadManager dlManager;
    private static AppWindow window;
 
-   /**
-    * Launch the application.
-    */
-   public static void main(String[] args) {
-      EventQueue.invokeLater(new Runnable() {
-         public void run() {
-            try {
-               UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-               AppWindow frame = new AppWindow();
-               frame.setVisible(true);
-            } catch (Exception e) {
-               e.printStackTrace();
-            }
-         }
-      });
-   }
 
    /**
     * Create the frame.
     */
    public AppWindow() {
-      dlManager = new DownloadManager(this);
 
       setResizable(false);
       setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -67,6 +50,10 @@ public class AppWindow extends JFrame {
       downloadList.setBounds(10, 118, 613, 308);
       contentPane.add(downloadList);
 
+   }
+   
+   public void setDownloadManager(DownloadManager dlManager) {
+      this.dlManager = dlManager;
       controlPanel.setDestination(dlManager.getDestinationFolder());
    }
 
@@ -118,10 +105,25 @@ public class AppWindow extends JFrame {
 
    public void makeButtonClickableAllRow(boolean clickable) {
       downloadList.makeButtonClickableAllRow(clickable);
-      ;
    }
 
    public void restartWorker(int downloadSeq) {
       dlManager.restartWorker(downloadSeq);
+   }
+
+   public CredentialInformation getCredentialInfo(String requester) {
+      String title = String.format("Username/password for %s", requester);
+      UserPasswordDialog userPasswordDialog = new UserPasswordDialog(this, title);
+      userPasswordDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+      userPasswordDialog.setVisible(true);
+      
+      String uname, password;
+      uname = userPasswordDialog.getUsername();
+      password = userPasswordDialog.getPassword();
+      
+      if ("".equals(uname) && "".equals(password)) {
+         return null;
+      }
+      return new CredentialInformation(userPasswordDialog.getUsername(), userPasswordDialog.getPassword());
    }
 }

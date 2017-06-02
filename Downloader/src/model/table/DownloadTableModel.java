@@ -36,19 +36,21 @@ public class DownloadTableModel extends DefaultTableModel {
 
    public void clearExceptRows() {
       exceptRows.clear();
+      exceptAll = false;
    }
 
    public void removeExceptRow(int row) {
       exceptRows.remove(row);
-   }
-
-   @Override
-   public Class<?> getColumnClass(int column) {
-      return getValueAt(0, column).getClass();
+      if (exceptRows.size() == 0) exceptAll = false;
    }
 
    @Override
    public boolean isCellEditable(int row, int col) {
+      try {
+         getValueAt(row, col);
+      } catch (ArrayIndexOutOfBoundsException e) {
+         return false;
+      }
       return exceptAll ? false : col == 1 && (!exceptRows.contains(row));
    }
 

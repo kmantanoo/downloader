@@ -91,4 +91,26 @@ public class URLUtil {
 
       return null;
    }
+   
+   public static String getFileDirectory(String url) throws NullPointerException {
+      if (url == null)
+         throw new NullPointerException("url");
+      
+      Matcher m = COMPILED.matcher(url);
+      if (m.matches()) {
+         
+         String woProtocol = m.group(2);
+         Pattern p = Pattern.compile("(?:[\\w\\.]+)((?:/\\w+)*)/(?:[^/]+)");
+         m = p.matcher(woProtocol);
+
+         if (m.matches()) {
+
+            String fileDirectory = m.group(1);
+            return "".equals(fileDirectory) ? "/" : fileDirectory;
+
+         }
+
+      }
+      return null;
+   }
 }

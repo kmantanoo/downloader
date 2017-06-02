@@ -5,8 +5,6 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.Vector;
 
-import javax.swing.JDialog;
-
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.ChannelSftp.LsEntry;
 import com.jcraft.jsch.JSch;
@@ -14,18 +12,14 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpException;
 
+import model.CredentialInformation;
 import utils.URLUtil;
-import view.window.AppWindow;
-import view.window.UserPasswordDialog;
 
-public class SFTPDataSource extends DataSource implements CredentialRequired {
+public class SFTPDataSource extends DataSource {
    private Session session;
    private ChannelSftp ch;
    private String filePath;
    private static int DEFAULT_SFTP_PORT = 22;
-   private String username;
-   private String password;
-   private AppWindow app;
 
    @Override
    public InputStream getInputStream() throws Exception {
@@ -54,14 +48,14 @@ public class SFTPDataSource extends DataSource implements CredentialRequired {
       Properties prop = new Properties();
 
       host = URLUtil.getHost(source);
-      getCredentialInfos();
+      CredentialInformation credInfo = getCredentialInfo();
 
       JSch sch = new JSch();
       try {
          prop.put("StrictHostKeyChecking", "no");
 
-         session = sch.getSession(username, host, DEFAULT_SFTP_PORT);
-         session.setPassword(password);
+         session = sch.getSession(credInfo.getUsername(), host, DEFAULT_SFTP_PORT);
+         session.setPassword(credInfo.getPassword());
          session.setConfig(prop);
          session.connect();
 
@@ -77,13 +71,6 @@ public class SFTPDataSource extends DataSource implements CredentialRequired {
       }
    }
 
-   private void getCredentialInfos() {
-      String title = String.format("Username/password for %s", source);
-      UserPasswordDialog userPasswordDialog = new UserPasswordDialog(app, title, this);
-      userPasswordDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-      userPasswordDialog.setVisible(true);
-   }
-
    @Override
    public void closeConnection() throws Exception {
       if (ch != null)
@@ -92,9 +79,9 @@ public class SFTPDataSource extends DataSource implements CredentialRequired {
          session.disconnect();
    }
 
-   @Override
-   public void setCredentialInfo(String username, String password) {
-      this.username = username;
-      this.password = password;
-   }
+//   @Override
+//   public void setCredentialInfo(CredentialInformation info) {
+//      this.username = info.getUsername();
+//      this.password = info.getPassword();
+//   }
 }

@@ -1,27 +1,22 @@
-package model.datasource;
+  package model.datasource;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.AccessDeniedException;
 
-import javax.swing.JDialog;
-
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 
+import model.CredentialInformation;
+import model.exception.InvalidProtocolException;
 import utils.URLUtil;
-import view.window.AppWindow;
-import view.window.UserPasswordDialog;
 
-public class FTPDataSource extends DataSource implements CredentialRequired {
+public class FTPDataSource extends DataSource {
    private FTPClient client;
    private FTPFile file;
    private static String DEFAULT_USER = "anonymous";
    private static String DEFAULT_PASSWORD = "test@test.com";
    private static int LOGIN_SUCCESS = 230;
-   private String username;
-   private String password;
-   private AppWindow app;
 
    @Override
    public InputStream getInputStream() throws IOException {
@@ -34,29 +29,28 @@ public class FTPDataSource extends DataSource implements CredentialRequired {
    }
 
    @Override
-   public void openConnection() throws IOException {
+   public void openConnection() throws IOException, InvalidProtocolException {
 
       if (client == null)
          client = new FTPClient();
+      
+      if (source == null)
+         throw new NullPointerException("source");
+      
+      isValidProtocol(source, "ftp");
       client.connect(URLUtil.getHost(source));
       client.login(DEFAULT_USER, DEFAULT_PASSWORD);
       if (client.getReplyCode() != LOGIN_SUCCESS) {
-         getCredentialInfos();
-         client.login(username, password);
+         CredentialInformation credInfo = getCredentialInfo();
+         client.login(credInfo.getUsername(), credInfo.getPassword());
       }
 
       try {
-         file = client.listFiles(URLUtil.getFilePath(source))[0];
+         String filePath = URLUtil.getFilePath(source);
+         file = client.listFiles(filePath)[0];
       } catch (IndexOutOfBoundsException e) {
          throw new AccessDeniedException(URLUtil.getFilePath(source));
       }
-   }
-
-   private void getCredentialInfos() {
-      String title = String.format("Username/password for %s", source);
-      UserPasswordDialog userPasswordDialog = new UserPasswordDialog(app, title, this);
-      userPasswordDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-      userPasswordDialog.setVisible(true);
    }
 
    @Override
@@ -65,9 +59,9 @@ public class FTPDataSource extends DataSource implements CredentialRequired {
          client.disconnect();
    }
 
-   @Override
-   public void setCredentialInfo(String username, String password) {
-      this.username = username;
-      this.password = password;
-   }
+//   @Override
+//   public void setCredentialInfo(String username, String password) {
+//      this.username = username;
+//      this.password = password;
+//   }
 }

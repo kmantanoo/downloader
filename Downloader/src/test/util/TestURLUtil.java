@@ -1,6 +1,6 @@
 package test.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
@@ -37,10 +37,10 @@ public class TestURLUtil {
       assertEquals("speedtest.tele2.net", URLUtil.getHost(links.get(0)));
       assertEquals("localhost", URLUtil.getHost(links.get(1)));
       assertEquals("127.0.0.1", URLUtil.getHost(links.get(2)));
-      assertEquals(null, URLUtil.getHost(links.get(3)));
-      assertEquals(null, URLUtil.getHost(links.get(4)));
+      assertNull(URLUtil.getHost(links.get(3)));
+      assertNull(URLUtil.getHost(links.get(4)));
       assertEquals("test.domain.com", URLUtil.getHost(links.get(5)));
-      assertEquals(null, URLUtil.getHost(links.get(6)));
+      assertNull(URLUtil.getHost(links.get(6)));
    }
 
    @Test
@@ -48,10 +48,10 @@ public class TestURLUtil {
       assertEquals("a/b/c/d.txt", URLUtil.getFilePath(links.get(0)));
       assertEquals("e/f/g/h.txt", URLUtil.getFilePath(links.get(1)));
       assertEquals("aa/bb/cc/dddd.txt", URLUtil.getFilePath(links.get(2)));
-      assertEquals(null, URLUtil.getFilePath(links.get(3)));
-      assertEquals(null, URLUtil.getFilePath(links.get(4)));
-      assertEquals(null, URLUtil.getFilePath(links.get(5)));
-      assertEquals(null, URLUtil.getFilePath(links.get(6)));
+      assertNull(URLUtil.getFilePath(links.get(3)));
+      assertNull(URLUtil.getFilePath(links.get(4)));
+      assertNull(URLUtil.getFilePath(links.get(5)));
+      assertNull(URLUtil.getFilePath(links.get(6)));
    }
 
    @Test
@@ -62,7 +62,7 @@ public class TestURLUtil {
       assertEquals("https", URLUtil.getProtocolFromURL(links.get(3)));
       assertEquals("http", URLUtil.getProtocolFromURL(links.get(4)));
       assertEquals("ftp", URLUtil.getProtocolFromURL(links.get(5)));
-      assertEquals(null, URLUtil.getProtocolFromURL(links.get(6)));
+      assertNull(URLUtil.getProtocolFromURL(links.get(6)));
    }
    
    @Test
@@ -70,10 +70,21 @@ public class TestURLUtil {
       assertEquals("d.txt", URLUtil.getFileName(links.get(0)));
       assertEquals("h.txt", URLUtil.getFileName(links.get(1)));
       assertEquals("dddd.txt", URLUtil.getFileName(links.get(2)));
-      assertEquals(null, URLUtil.getFileName(links.get(3)));
-      assertEquals(null, URLUtil.getFileName(links.get(4)));
-      assertEquals(null, URLUtil.getFileName(links.get(5)));
-      assertEquals(null, URLUtil.getFileName(links.get(6)));
+      assertNull(URLUtil.getFileName(links.get(3)));
+      assertNull(URLUtil.getFileName(links.get(4)));
+      assertNull(URLUtil.getFileName(links.get(5)));
+      assertNull(URLUtil.getFileName(links.get(6)));
+   }
+   
+   @Test
+   public void testGetFileDirectory() {
+      assertEquals("/a/b/c", URLUtil.getFileDirectory(links.get(0)));
+      assertEquals("/e/f/g", URLUtil.getFileDirectory(links.get(1)));
+      assertEquals("/aa/bb/cc", URLUtil.getFileDirectory(links.get(2)));
+      assertNull(URLUtil.getFileDirectory(links.get(3)));
+      assertNull(URLUtil.getFileDirectory(links.get(4)));
+      assertNull(URLUtil.getFileDirectory(links.get(5)));
+      assertNull(URLUtil.getFileDirectory(links.get(6)));
    }
 
    @Test
@@ -98,6 +109,12 @@ public class TestURLUtil {
    public void testNullInputOnGetFileName() {
       expEx.expect(NullPointerException.class);
       URLUtil.getFileName(links.get(7));
+   }
+   
+   @Test
+   public void testNullInputOnGetFileDirectory() {
+      expEx.expect(NullPointerException.class);
+      URLUtil.getFileDirectory(links.get(7));
    }
 
    @AfterClass
