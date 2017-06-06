@@ -3,6 +3,7 @@ package model.datasource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import model.exception.InvalidProtocolException;
@@ -10,21 +11,29 @@ import model.exception.InvalidProtocolException;
 public class HTTPDataSource extends DataSource {
    private HttpURLConnection conn;
    private URL url;
+   
+   public HTTPDataSource() {
+      isConnectionOpen = false;
+   }
 
    @Override
    public InputStream getInputStream() throws IOException {
+      if (! isConnectionOpen) throw new IllegalStateException("Connection was not established yet.");
       return conn.getInputStream();
    }
 
    @Override
    public long getSize() {
+      if (! isConnectionOpen) throw new IllegalStateException("Connection was not established yet.");
       return conn.getContentLengthLong();
    }
 
    @Override
-   public void openConnection() throws IOException, InvalidProtocolException {
+   public void openConnection() throws IOException, InvalidProtocolException, URISyntaxException {
+      if (isConnectionOpen) throw new IllegalStateException("Connection was established.");
+      
       if (source == null)
-         throw new NullPointerException(source);
+         throw new NullPointerException("source");
       
       url = new URL(source);
       isValidProtocol(source, "http");
@@ -35,12 +44,20 @@ public class HTTPDataSource extends DataSource {
       if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
          throw new IOException(String.format("%s:%s", source, conn.getResponseMessage()));
       }
+      isConnectionOpen = true;
    }
 
    @Override
    public void closeConnection() throws Exception {
+      if (! isConnectionOpen) throw new IllegalStateException("Connection was not established yet.");
       if (conn == null) throw new NullPointerException("conn");
       conn.disconnect();
       conn = null;
+      isConnectionOpen = false;
+   }
+   
+   @Override
+   public boolean isRequireCredential() {
+      return false;
    }
 }

@@ -35,7 +35,7 @@ public class AppConfig {
    }
 
    public String getProp(String key) {
-      return properties.getProperty(key);
+      return key == null ? null : properties.getProperty(key);
    }
 
    public Properties getProperties() {

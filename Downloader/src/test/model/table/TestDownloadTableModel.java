@@ -258,22 +258,4 @@ public class TestDownloadTableModel {
       assertTrue(model.isCellEditable(2, 1));
       assertTrue(model.isCellEditable(3, 1));
    }
-   
-   @Test
-   public void testContruct() {
-      DownloadTableModel model = new DownloadTableModel(null);
-      assertEquals(0, model.getRowCount());
-      assertFalse(model.isCellEditable(0, 0));
-      assertFalse(model.isCellEditable(0, 1));
-      
-      model = new DownloadTableModel(new Object[][]{});
-      assertEquals(0, model.getRowCount());
-      assertFalse(model.isCellEditable(0, 0));
-      assertFalse(model.isCellEditable(0, 1));
-      
-      model = new DownloadTableModel(data);
-      assertEquals(data.length, model.getRowCount());
-      assertFalse(model.isCellEditable(0, 0));
-      assertTrue(model.isCellEditable(0, 1));
-   }
 }

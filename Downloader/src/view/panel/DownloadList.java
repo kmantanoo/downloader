@@ -52,6 +52,7 @@ public class DownloadList extends JPanel {
       table.setRowSelectionAllowed(false);
       table.getColumnModel().getColumn(0).setPreferredWidth(500);
       table.getColumnModel().getColumn(1).setPreferredWidth(111);
+      table.setRowHeight(40);
 
       scrollPane.setViewportView(table);
       this.app = app;

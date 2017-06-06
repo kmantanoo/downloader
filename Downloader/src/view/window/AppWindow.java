@@ -72,7 +72,8 @@ public class AppWindow extends JFrame {
    }
 
    public void downloadFiles(String sources) {
-      dlManager.downloadFiles(sources);
+      dlManager.setSources(sources);
+      dlManager.downloadFiles();
    }
 
    public void clearDataTable() {

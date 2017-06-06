@@ -12,6 +12,6 @@ public class InvalidURLException extends Exception {
    }
 
    public InvalidURLException(String invalidUrl) {
-      super(String.format("Invalid URL:\"%s\"", invalidUrl));
+      super(invalidUrl);
    }
 }

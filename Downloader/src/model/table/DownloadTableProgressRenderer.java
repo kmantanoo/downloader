@@ -8,7 +8,7 @@ import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import model.Downloader;
+import controller.Downloader;
 import model.enumeration.DownloadState;
 import view.panel.DownloadList;
 

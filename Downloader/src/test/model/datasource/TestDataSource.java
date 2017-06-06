@@ -1,16 +1,14 @@
 package test.model.datasource;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
-import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import config.AppConfig;
-import controller.DownloadManager;
-import model.Downloader;
 import model.datasource.DataSource;
 import model.exception.InvalidProtocolException;
 
@@ -19,69 +17,33 @@ public class TestDataSource {
    
    @BeforeClass
    public static void setup() {
-      dataSource = new DataSource() {
-         
-         @Override
-         public void openConnection() throws Exception {
-            // TODO Auto-generated method stub
-            
-         }
-         
-         @Override
-         public long getSize() throws Exception {
-            // TODO Auto-generated method stub
-            return 0;
-         }
-         
+      dataSource = new DataSource(){
+
          @Override
          public InputStream getInputStream() throws Exception {
-            // TODO Auto-generated method stub
             return null;
          }
-         
+
          @Override
-         public void closeConnection() throws Exception {
-            // TODO Auto-generated method stub
+         public long getSize() throws Exception {
+            return 0;
+         }
+
+         @Override
+         public void openConnection() throws Exception {
             
          }
+
+         @Override
+         public void closeConnection() throws Exception {
+         }
+
+         @Override
+         public boolean isRequireCredential() {
+            return false;
+         }
+         
       };
-   }
-
-   @Test
-   public void testGetSetSource() {
-      dataSource.setSource(null);
-      assertEquals(null, dataSource.getSource());
-      
-      dataSource.setSource("source");
-      assertEquals("source", dataSource.getSource());
-      
-      String source = "http://some.url.com/file/to/path";
-      dataSource.setSource(source);
-      assertEquals(source, dataSource.getSource());
-      
-      dataSource.setSource(null);
-      assertEquals(null, dataSource.getSource());
-   }
-   
-   @Test
-   public void testSetAppConfig() throws Exception {
-      Field conf = DataSource.class.getDeclaredField("conf");
-      conf.setAccessible(true);
-      
-      dataSource.setAppConfig(AppConfig.getInstance());
-      AppConfig fromField = (AppConfig) conf.get(dataSource);
-      assertEquals(AppConfig.getInstance(), fromField);
-   }
-
-   @Test
-   public void testSetDownloader() throws Exception {
-      Field downloader = DataSource.class.getDeclaredField("downloader");
-      downloader.setAccessible(true);
-      
-      Downloader dl = new Downloader(new DownloadManager(), "http://test.com", 0);
-      dataSource.setDownloader(dl);
-      Downloader fromField = (Downloader) downloader.get(dataSource);
-      assertEquals(dl, fromField);
    }
    
    @Test
@@ -107,27 +69,27 @@ public class TestDataSource {
    }
    
    @Test(expected=InvalidProtocolException.class)
-   public void testIsValidProtocolWithNull() throws InvalidProtocolException {
+   public void testIsValidProtocolWithNull() throws InvalidProtocolException, MalformedURLException, URISyntaxException {
       assertTrue(dataSource.isValidProtocol(null, "http"));
    }
    
    @Test(expected=InvalidProtocolException.class)
-   public void testIsValidProtocolWithNull2() throws InvalidProtocolException {
+   public void testIsValidProtocolWithNull2() throws InvalidProtocolException, MalformedURLException, URISyntaxException {
       assertTrue(dataSource.isValidProtocol("http://www.google.com", null));
    }
    
    @Test(expected=InvalidProtocolException.class)
-   public void testIsValidProtocolWithEmpty() throws InvalidProtocolException {
+   public void testIsValidProtocolWithEmpty() throws InvalidProtocolException, MalformedURLException, URISyntaxException {
       assertTrue(dataSource.isValidProtocol("", "http"));
    }
    
    @Test(expected=InvalidProtocolException.class)
-   public void testIsValidProtocolWithEmpty2() throws InvalidProtocolException {
+   public void testIsValidProtocolWithEmpty2() throws InvalidProtocolException, MalformedURLException, URISyntaxException {
       assertTrue(dataSource.isValidProtocol("http://www.google.com", ""));
    }
    
    @Test(expected=InvalidProtocolException.class)
-   public void testIsValidProtocolWithNotContainsProtocol() throws InvalidProtocolException {
+   public void testIsValidProtocolWithNotContainsProtocol() throws InvalidProtocolException, MalformedURLException, URISyntaxException {
       assertTrue(dataSource.isValidProtocol("www.google.com", "http"));
    }
 }

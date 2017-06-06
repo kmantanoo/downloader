@@ -1,84 +1,93 @@
 package controller;
 
 import java.awt.EventQueue;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
+import config.AppConfig;
 import config.UserSettings;
 import model.CredentialInformation;
-import model.Downloader;
+import model.datasource.CredentialRequired;
+import model.datasource.DataSource;
+import model.datasource.DataSourceFactory;
 import model.enumeration.DownloadState;
-import model.exception.InvalidURLException;
-import utils.TimeUtil;
+import utils.URLUtil;
 import view.window.AppWindow;
 
 public class DownloadManager {
    private UserSettings settings;
+   private AppConfig conf;
    private AppWindow app;
    private List<Downloader> workers;
    private String sources;
 
    public DownloadManager() {
       settings = new UserSettings();
+      conf = AppConfig.getInstance();
       workers = new ArrayList<Downloader>();
    }
-   
+
    public void setAppWindow(AppWindow app) {
       this.app = app;
    }
 
-   public void downloadFiles(String sourceString) {
-      sources = sourceString;
+   public void downloadFiles() {
       workers.clear();
-      app.makeButtonClickableAllRow(true);
+      if (app != null) app.makeButtonClickableAllRow(true);
       int downloadSeq = 0;
-      for (String source : getSourcesList(sourceString)) {
+      for (String source : getSourcesList(sources)) {
          newDownload(source, downloadSeq++);
       }
    }
 
    private void newDownload(String source, int downloadSeq) {
-      try {
-         Downloader worker = new Downloader(this, source, downloadSeq);
-         app.addRow(new Object[] { 0, DownloadState.DOWNLOAD });
+      // try {
+      // } catch (NullPointerException | InvalidURLException e) {
+      // try {
+      // String filePath = FileUtil.logToFile(getDestinationFolder(),
+      // "download_error.log", e);
+      // String errorMsg = String.format("%s\n%s %s", e.getMessage(), "See full
+      // log at", filePath);
+      // JOptionPane.showMessageDialog(app, errorMsg, "Error",
+      // JOptionPane.ERROR_MESSAGE);
+      // } catch (IOException e1) {
+      // e1.printStackTrace();
+      // }
+      // }
+      Downloader worker = new Downloader(downloadSeq);
+      putNeccessaryStuff(worker, source);
+      if (app != null) app.addRow(new Object[] { 0, DownloadState.DOWNLOAD});
 
-         workers.add(worker);
-         worker.execute();
-      } catch (NullPointerException | InvalidURLException e) {
-         try {
-            String filePath = logToFile(e);
-            String errorMsg = String.format("%s\n%s %s", e.getMessage(), "See full log at", filePath);
-            JOptionPane.showMessageDialog(app, errorMsg, "Error", JOptionPane.ERROR_MESSAGE);
-         } catch (IOException e1) {
-            e1.printStackTrace();
-         }
-      }
+      workers.add(worker);
+      worker.execute();
+   }
+   
+   public void putNeccessaryStuff(Downloader worker, String source) {
+      worker.setSource(source);
+      worker.setDownloadManager(this);
+      worker.setDataSource(instanceDataSource(source));
+      worker.setTimeOut(getTimeOut());
    }
 
-   private String logToFile(Throwable e) throws IOException {
-      String destination = settings.getDestinationFolder();
-      Path logFilePath = FileSystems.getDefault().getPath(destination, "downloader_error.log");
-      FileOutputStream fos = new FileOutputStream(logFilePath.toString(), true);
-      PrintStream ps = new PrintStream(fos);
+   public DataSource instanceDataSource(String source) {
+      DataSource dataSource = null;
+      try {
+         String dataSourceClass = conf.getProp("protocol." + URLUtil.getProtocolFromURL(source));
+         String dataSourcePackage = conf.getProp("datasource.package");
 
-      ps.println();
-      ps.println(TimeUtil.getTimeStampWithDate() + "\n");
-      e.printStackTrace(ps);
-      ps.println();
-      fos.close();
-
-      ps.close();
-
-      return logFilePath.toString();
+         dataSource = DataSourceFactory.newInstance(String.format("%s.%s", dataSourcePackage, dataSourceClass), source);
+         if (dataSource.isRequireCredential()) {
+            CredentialInformation credInfo = app.getCredentialInfo(source);
+            ((CredentialRequired) dataSource).setCredentialInfo(credInfo);
+         }
+      } catch (Exception e) {
+         
+      }
+      return dataSource;
    }
 
    private List<String> getSourcesList(String sources) {
@@ -94,31 +103,44 @@ public class DownloadManager {
    public void setDestinationFolder(String destination) {
       settings.setDestinationFolder(destination);
    }
+   
+   public void setSources(String sources) {
+      this.sources = sources;
+   }
 
    public String getSourceAtIndex(int index) {
-      return getSourcesList(sources).get(index);
+      return (index < 0 || index >= (getSourcesList(sources).size())) ? 
+            null : getSourcesList(sources).get(index);
    }
 
    public Path getSavedFile(int index) {
       return workers.get(index).getSavedPath();
    }
-   
+
    public AppWindow getAppWindow() {
       return app;
    }
 
    public void cancelDownload() {
-      for (Downloader worker : workers) {
-         worker.cancel(true);
+      for (int i = 0; i < workers.size(); i++) {
+         cancelDownload(i);
       }
+   }
+
+   public void cancelDownload(int downloadSeq) {
+      workers.get(downloadSeq).cancel(true);
    }
 
    public DownloadState getDownloadState(int downloadSeq) {
       return workers.get(downloadSeq).getDownloadState();
    }
+   
+   public Downloader getDownloader(int index) {
+      return workers.get(index);
+   }
 
-   public void cancelDownload(int downloadSeq) {
-      workers.get(downloadSeq).cancel(true);
+   public int getTimeOut() {
+      return Integer.parseInt(conf.getProp("timeout"));
    }
 
    public void restartWorker(int downloadSeq) {
@@ -127,11 +149,6 @@ public class DownloadManager {
       newInstance.execute();
    }
 
-   public CredentialInformation getCredentialInfo(String requester) {
-      return app.getCredentialInfo(requester);
-   }
-   
-   
    /**
     * Launch the application.
     */
@@ -142,7 +159,7 @@ public class DownloadManager {
                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                DownloadManager dlManager = new DownloadManager();
                AppWindow appWindow = new AppWindow();
-               
+
                dlManager.setAppWindow(appWindow);
                appWindow.setDownloadManager(dlManager);
                appWindow.setVisible(true);
